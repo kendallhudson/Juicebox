@@ -8,6 +8,7 @@ const {
     getAllPosts,
     getPostsByUser,
     getUserById,
+    createTags,
   } = require('./index');
   
   async function createInitialPosts() {
@@ -30,7 +31,10 @@ const {
     try {
       console.log("Starting to drop tables...");
   
+      // have to make sure to drop in correct order
       await client.query(`
+        DROP TABLE IF EXISTS post_tags;
+        DROP TABLE IF EXISTS tags;
         DROP TABLE IF EXISTS posts;
         DROP TABLE IF EXISTS users;
       `);
@@ -69,6 +73,42 @@ const {
       console.error("Error building tables!");
       throw error;
     }
+  }
+//   From Part 3 - Tags and Post_Tags New Tables...
+  async function createTagTable() {
+      try {
+        console.log('Starting to create tags table...')
+
+        await client.query(`
+        CREATE TABLE tags (
+        id SERIAL PRIMARY KEY,
+        name varchar(255) UNIQUE NOT NULL
+          );
+        `);
+
+        console.log('Finished creating tags table!')
+      } catch (error) {
+          console.log('Error creating tags table!')
+          throw error;
+      }
+  }
+
+  async function createPostTagsTable() {
+      try {
+        console.log('Starting to create post tags table...')
+
+        await client.query(`
+        CREATE TABLE post_tags (
+        "postId", INTEGER REFERENCES posts(id),
+        "tagId", INTEGER REFERENCES tags(id),
+        UNIQUE ("postId", "tagId") 
+        `)
+
+        console.log('Finished creating post tags table!')
+      } catch (error) {
+          console.log('Error creating post tags table!')
+          throw error;
+      }
   }
   
   async function createInitialUsers() {
